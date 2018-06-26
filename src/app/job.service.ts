@@ -19,7 +19,7 @@ export class JobService {
   private _selectedJob: BehaviorSubject<Job>;
   private _updateList: BehaviorSubject<boolean>;
   private api = 'http://localhost:8080/jobs';
-  private webdav_url = 'http://localhost:5050/';
+  private webdav_url = 'http://localhost:8989/webdav';
 
   constructor(
     private http: HttpClient,
@@ -66,7 +66,7 @@ export class JobService {
     // headers.append('Authorization', 'Basic d2ViZGF2OnZhZGJldw==');
     // httpHeaders.append('Authorization', 'Basic d2ViZGF2OnZhZGJldw==');
     return new Promise<boolean>((resolve, reject) => {
-      this.http.get(dir_url, {headers: httpHeaders}).subscribe(
+      this.http.get(dir_url, {headers: httpHeaders, responseType: 'text'}).subscribe(
         (value) => {
           resolve(true);
         },
