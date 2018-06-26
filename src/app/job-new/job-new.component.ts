@@ -2,16 +2,19 @@ import { Component, OnInit, ViewChild, ViewChildren, ViewContainerRef } from '@a
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { JobService, JobDescription } from '../job.service';
+import { safeLoad } from 'js-yaml';
 
 interface Input {
   id: string;
   type: string;
   intputBinding: object;
+  default: string;
 }
 
 interface InputElement {
   id: string;
   type: 'checkbox' | 'file' | 'number' | 'text';
+  value: string|null;
 }
 
 interface FileInput {
@@ -76,22 +79,25 @@ export class JobNewComponent {
         let workflow: Workflow;
         reader.onload = file => {
           const contents: any = file.target;
-          workflow = JSON.parse(contents.result);
+          workflow = safeLoad(contents.result);
+          // workflow = JSON.parse(contents.result);
+          console.log(workflow.id, workflow.inputs);
 
           Object.keys(this.inputControls.controls).forEach((control) => {
             this.inputControls.removeControl(control);
           });
           this.inputs = [];
 
-          console.log(workflow);
-
           const id: string = workflow.id;
 
-          workflow.inputs.forEach(input => {
-            const inputid: string = input.id.replace(id + '/', '');
+          /* workflow.inputs.forEach(input => {*/
+          Object.keys(workflow.inputs).forEach(key => {
+            const input = workflow.inputs[key];
+            const inputid: string = key.replace(id + '/', '');
             const inputElement: InputElement = {
               id: inputid,
-              type: 'text'
+              type: 'text',
+              value: null
             };
 
             if (input.type !== 'File') {
@@ -101,6 +107,7 @@ export class JobNewComponent {
             switch (input.type) {
               case 'string':
                 inputElement.type = 'text';
+                inputElement.value = input.default;
                 break;
               case 'boolean':
                 inputElement.type = 'checkbox';
@@ -123,6 +130,16 @@ export class JobNewComponent {
     if (this.jobForm.valid) {
       this.uploadFiles().then(success => {
         this.submitJob();
+      }, error => {
+        console.log(error);
+      });
+    } else {
+      console.log(this.jobForm);
+      console.log(this.jobForm.controls);
+      console.log(this.jobForm.errors);
+
+      Object.keys(this.jobForm.controls).forEach(key => {
+        console.log(key, this.jobForm.controls[key].invalid);
       });
     }
   }
