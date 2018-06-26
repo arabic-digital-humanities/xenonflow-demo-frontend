@@ -101,7 +101,7 @@ export class JobNewComponent {
             };
 
             if (input.type !== 'File') {
-              this.inputControls.addControl(inputid, new FormControl('', Validators.required));
+              this.inputControls.addControl(inputid, new FormControl(''));
             }
 
             switch (input.type) {
@@ -152,6 +152,7 @@ export class JobNewComponent {
         const dirname = this.jobName;
 
         this.jobService.createDir(dirname).then(dirExists => {
+          console.log('dirExists', dirExists);
           this.jobService.uploadFile('workflow', fi.files[0], dirname).then(success => {
             this.files['workflow'] = {
               id: 'workflow',
