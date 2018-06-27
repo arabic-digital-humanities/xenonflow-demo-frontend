@@ -12,12 +12,20 @@ export interface JobDescription {
   workflow: string;
 }
 
+export interface InputElement {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+};
+
 @Injectable()
 export class JobService {
   private _selectedJob: BehaviorSubject<Job>;
   private _updateList: BehaviorSubject<boolean>;
   private api = 'http://localhost:8080/jobs';
   private webdav_url = 'http://localhost:8989/webdav';
+  public inputElements: InputElement[];
 
   constructor(
     private http: HttpClient,
@@ -25,6 +33,7 @@ export class JobService {
   ) {
     this._selectedJob = <BehaviorSubject<Job>>new BehaviorSubject(null);
     this._updateList = <BehaviorSubject<boolean>>new BehaviorSubject(false);
+    this.inputElements = [];
   }
 
   get selectedJob() {
@@ -85,8 +94,8 @@ export class JobService {
     });
   }
 
-  uploadFile(id, file, dirname): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
+  uploadFile(file, dirname): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = readfile => {
         const contents: any = readfile.target;
@@ -94,11 +103,14 @@ export class JobService {
 
         const header =  new Headers();
         header.append('Content-Type', 'application/octet-stream');
-        this.webdav.put(`${this.webdav_url}/${dirname}/${file.name}`, body, {headers: header})
+
+        const path = `${dirname}/${file.name}`;
+
+        this.webdav.put(`${this.webdav_url}/${path}`, body, {headers: header})
           .subscribe(
             (value) => {
               console.log('Succesfully uploaded file: ' + file.name);
-              resolve(true);
+              resolve('/webdav/' + path);
             },
             (error) => {
               console.log(error);

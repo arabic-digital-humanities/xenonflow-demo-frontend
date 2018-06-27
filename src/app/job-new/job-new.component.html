@@ -19,22 +19,22 @@
         <button class="btn btn-primary" (click)="processWorkflow()">Next step</button>
       </fieldset>
 
-      <fieldset class="workflow-input" *ngIf="activeWorkflow">
-        <div *ngFor="let input of activeWorkflow.inputs" class="form-group">
+      <fieldset class="workflow-input" *ngIf="activeWorkflow" [formGroup]="inputControls">
+        <div *ngFor="let input of inputElements" class="form-group">
           <label>{{input.name}}</label>
           <ng-container [ngSwitch]="input.type">
-            <input *ngSwitchCase="'file'" type="file" class="form-control" name="{{input.id}}" formControlName="{{input.id}}">
+            <input *ngSwitchCase="'file'" type="file" class="form-control" formControlName="{{input.id}}" name="{{input.name}}" #fileInput>
             <div *ngSwitchCase="'boolean'">
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" value="1" formControlName="{{input.id}}" [checked]="input.default != 'false'">
+                <input class="form-check-input" type="radio" value="1" formControlName="{{input.id}}">
                 <label class="form-check-label">Yes</label>
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" value="" formControlName="{{input.id}}" [checked]="input.default == 'false'">
+                <input class="form-check-input" type="radio" value="" formControlName="{{input.id}}">
                 <label class="form-check-label">No</label>
               </div>
             </div>
-            <input *ngSwitchDefault type="text" class="form-control" name="{{input.id}}" value="{{input.default}}" formControlName="{{input.id}}">
+            <input *ngSwitchDefault type="text" class="form-control" formControlName="{{input.id}}">
           </ng-container>
           <small *ngIf="input.description" class="form-text text-muted">{{input.description}}</small>
         </div>

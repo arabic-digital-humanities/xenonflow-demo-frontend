@@ -9,14 +9,17 @@ import {safeLoad} from 'js-yaml';
 import {isObject} from 'util';
 
 export interface WorkflowInput {
-  [x: string]: object;
+  id: string;
+  description: string;
+  type: string;
+  default: any;
 }
 
 export interface Workflow {
   name: string;
   description: string;
   filename: string;
-  inputs: any;
+  inputs: WorkflowInput[];
 }
 
 @Injectable()
@@ -66,7 +69,7 @@ export class WorkflowService {
             id: key,
             name: key,
             description: '',
-            type: value,
+            type: value.toLowerCase(),
             default: null
           })
         }
@@ -74,7 +77,7 @@ export class WorkflowService {
     }
 
     return {
-      name: data.label || path,
+      name: data.label,
       description: data.doc || '',
       filename: path,
       inputs: inputs
@@ -100,7 +103,9 @@ export class WorkflowService {
         }).toPromise();
       }));
     }).then(workflows => {
-      return workflows.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      return workflows
+        .filter(x => x.name)
+        .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     });
   }
 }
