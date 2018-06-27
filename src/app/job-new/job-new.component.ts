@@ -3,13 +3,13 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { JobService, JobDescription } from '../job.service';
 import { safeLoad } from 'js-yaml';
+import {Workflow, WorkflowService} from '../workflow.service';
+import {Job} from '../job';
 
-interface Input {
+interface InputElement {
   id: string;
-  type: string;
-  intputBinding: object;
-  default: string;
-}
+  workflowInput:
+};
 
 interface InputElement {
   id: string;
@@ -22,13 +22,6 @@ interface FileInput {
   path: string;
 }
 
-interface Workflow {
-  id: string;
-  inputs: Input[];
-  outputs: object;
-  [x: string]: any;
-}
-
 interface FileLocations {
   [x: string]: FileInput;
 }
@@ -38,9 +31,10 @@ interface FileLocations {
   templateUrl: './job-new.component.html',
   styleUrls: ['./job-new.component.css']
 })
-export class JobNewComponent {
-
+export class JobNewComponent implements OnInit {
+  workflows: Workflow[];
   jobForm: FormGroup;
+  activeWorkflow: Workflow;
   public inputs: InputElement[];
 
   files: FileLocations;
@@ -52,14 +46,22 @@ export class JobNewComponent {
     private http: HttpClient,
     private fb: FormBuilder,
     private jobService: JobService,
+    private workflowService: WorkflowService,
     private viewContainerRef: ViewContainerRef) {
     this.jobForm = this.fb.group({
       name: ['', Validators.required ],
+      workflow_index: ['', Validators.required],
       inputControls: this.fb.group({})
     });
-
+    this.workflows = [];
     this.inputs = [];
     this.files = {};
+  }
+
+  ngOnInit() {
+    this.workflowService.getAllWorkflows.then((w: Workflow[]) => {
+      this.workflows = w;
+    });
   }
 
   get inputControls(): FormGroup {
@@ -71,58 +73,9 @@ export class JobNewComponent {
   }
 
   processWorkflow() {
-    const fi = this.fileInput.nativeElement;
-    const name = this.jobName;
-    if (fi.files && fi.files[0]) {
-        const fileToUpload = fi.files[0];
-        const reader = new FileReader();
-        let workflow: Workflow;
-        reader.onload = file => {
-          const contents: any = file.target;
-          workflow = safeLoad(contents.result);
-          // workflow = JSON.parse(contents.result);
-          console.log(workflow.id, workflow.inputs);
-
-          Object.keys(this.inputControls.controls).forEach((control) => {
-            this.inputControls.removeControl(control);
-          });
-          this.inputs = [];
-
-          const id: string = workflow.id;
-
-          /* workflow.inputs.forEach(input => {*/
-          Object.keys(workflow.inputs).forEach(key => {
-            const input = workflow.inputs[key];
-            const inputid: string = key.replace(id + '/', '');
-            const inputElement: InputElement = {
-              id: inputid,
-              type: 'text',
-              value: null
-            };
-
-            if (input.type !== 'File') {
-              this.inputControls.addControl(inputid, new FormControl(''));
-            }
-
-            switch (input.type) {
-              case 'string':
-                inputElement.type = 'text';
-                inputElement.value = input.default;
-                break;
-              case 'boolean':
-                inputElement.type = 'checkbox';
-                break;
-              case 'number':
-                inputElement.type = 'number';
-                break;
-              case 'File':
-                inputElement.type = 'file';
-                break;
-            }
-            this.inputs.push(inputElement);
-          });
-        };
-        reader.readAsText(fileToUpload);
+    const index = this.jobForm.get('workflow_index').value;
+    if (this.jobName && index.length) {
+      this.activeWorkflow = this.workflows[index];
     }
   }
 
@@ -134,9 +87,7 @@ export class JobNewComponent {
         console.log(error);
       });
     } else {
-      console.log(this.jobForm);
-      console.log(this.jobForm.controls);
-      console.log(this.jobForm.errors);
+      console.log('errors', this.jobForm.errors);
 
       Object.keys(this.jobForm.controls).forEach(key => {
         console.log(key, this.jobForm.controls[key].invalid);
@@ -144,46 +95,34 @@ export class JobNewComponent {
     }
   }
 
-  uploadFiles(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      const fi = this.fileInput.nativeElement;
-      if (fi.files && fi.files[0]) {
-        const fileToUpload = fi.files[0];
-        const dirname = this.jobName;
+  uploadFiles(): Promise<void> {
+    const dirname = this.jobName;
 
-        this.jobService.createDir(dirname).then(dirExists => {
-          console.log('dirExists', dirExists);
-          this.jobService.uploadFile('workflow', fi.files[0], dirname).then(success => {
-            this.files['workflow'] = {
-              id: 'workflow',
-              path: dirname + '/' + fi.files[0].name
+    return this.jobService.createDir(dirname).then(dirExists => {
+      Promise.all(this.inputFileInput.map(element => {
+        const native = element.nativeElement;
+        if (native.files && native.files[0]) {
+          return this.jobService.uploadFile(native.id, native.files[0], dirname).then(() => {
+            this.files[native.id] = {
+              id: native.id,
+              path: dirname + '/' + native.files[0].name
             };
-            Promise.all(this.inputFileInput.map(element => {
-              const native = element.nativeElement;
-              if (native.files && native.files[0]) {
-                return this.jobService.uploadFile(native.id, native.files[0], dirname).then(() => {
-                  this.files[native.id] = {
-                    id: native.id,
-                    path: dirname + '/' + native.files[0].name
-                  };
-                });
-              }
-            })).then( () => {
-              console.log('everything should be uploaded now.');
-              resolve(true);
-            });
           });
-        });
-      }
+        }
+      })).then(() => {
+        console.log('everything should be uploaded now.');
+      });
     });
   }
 
   submitJob() {
+    const index = this.jobForm.get('workflow_index').value;
+    const workflow = this.workflows[index];
+
     const job: JobDescription = {
       name: this.jobName,
-      workflow: this.files['workflow'].path,
-      input: {
-      }
+      workflow: workflow.filename,
+      input: workflow.inputs
     };
 
     const input = {};
@@ -195,15 +134,12 @@ export class JobNewComponent {
         };
       }
     });
-    Object.keys(this.inputControls.value).forEach(key => {
-        input[key] = this.inputControls.value[key];
-    });
-    job.input = input;
 
     this.jobService.submitJob(job).subscribe(
       (value) => {
-        console.log('Submission made');
+        console.log('Submission made', value);
         this.jobService.updateList = true;
+        this.jobService.setSelectedJob = value as Job;
       },
       (error) => {
         console.log(error);

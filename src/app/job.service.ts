@@ -3,10 +3,8 @@ import { BehaviorSubject, Observable } from 'rxjs/Rx';
 import { Job } from './job';
 import {WebDAV, Headers} from 'angular-webdav';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {WorkflowInput} from './workflow.service';
 
-export interface WorkflowInput {
-  [x: string]: object;
-}
 
 export interface JobDescription {
   name: string;
