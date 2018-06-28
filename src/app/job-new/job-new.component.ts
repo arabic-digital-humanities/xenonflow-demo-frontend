@@ -1,9 +1,8 @@
 import { Component, OnInit, ViewChild, ViewChildren, ViewContainerRef } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { JobService, JobDescription } from '../job.service';
+import {JobService, JobDescription, Workflow, WorkflowInput} from '../job.service';
 import { safeLoad } from 'js-yaml';
-import {Workflow, WorkflowInput, WorkflowService} from '../workflow.service';
 import {Job} from '../job';
 
 
@@ -26,12 +25,11 @@ export class JobNewComponent implements OnInit {
     private http: HttpClient,
     private fb: FormBuilder,
     private jobService: JobService,
-    private workflowService: WorkflowService,
     private viewContainerRef: ViewContainerRef) {
     this.jobForm = this.fb.group({
       name: ['', Validators.required ],
       workflow_index: ['', Validators.required],
-      input_controls: this.fb.group({})
+      inputControls: this.fb.group({})
     });
     this.workflows = [];
     this.inputElements = [];
@@ -39,13 +37,13 @@ export class JobNewComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.workflowService.getAllWorkflows.then((w: Workflow[]) => {
+    this.jobService.getAllWorkflows.then((w: Workflow[]) => {
       this.workflows = w;
     });
   }
 
   get inputControls(): FormGroup {
-    return this.jobForm.get('input_controls') as FormGroup;
+    return this.jobForm.get('inputControls') as FormGroup;
   }
 
   get jobName(): string {
