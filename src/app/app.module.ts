@@ -14,6 +14,7 @@ import { JobNewComponent } from './job-new/job-new.component';
 import { StateNamePipe } from './state-name.pipe';
 import { StateAlertPipe } from './state-alert.pipe';
 import { JobStateIconComponent } from './job-state-icon/job-state-icon.component';
+import { LoginComponent } from './login/login.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { JobStateIconComponent } from './job-state-icon/job-state-icon.component
     JobNewComponent,
     StateNamePipe,
     StateAlertPipe,
-    JobStateIconComponent
+    JobStateIconComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,

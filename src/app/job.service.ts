@@ -40,6 +40,10 @@ export class JobService {
     return this._selectedJob.asObservable();
   }
 
+  setCredentials(username: string, password: string) {
+
+  }
+
   set setSelectedJob(job: Job) {
     this._selectedJob.next(job);
   }

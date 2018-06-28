@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
       }
     });
   }
+
   ngOnInit() {
     this.panel = 'job-new';
   }

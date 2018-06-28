@@ -52,6 +52,10 @@ export class JobNewComponent implements OnInit {
     return this.jobForm.get('name').value as string;
   }
 
+  resetWorkflow() {
+    this.activeWorkflow = null;
+  }
+
   processWorkflow() {
     const index = this.jobForm.get('workflow_index').value;
     if (!this.jobName || !index.length) {
@@ -105,13 +109,26 @@ export class JobNewComponent implements OnInit {
     return this.jobService.createDir(directory).then(_ => {
       return Promise.all(inputs.map(input => {
         const elem = this.inputControls.get(input.id);
+        let val = elem.value;
+
+        if (val === null) {
+          return Promise.resolve([input.id, null]);
+        }
 
         if (input.type !== 'file') {
-          return Promise.resolve([input.id, elem.value]);
+          if (input.type === 'boolean') {
+            val = !!elem.value;
+          } else if (input.type === 'int') {
+            val = parseInt(val, 10);
+          }
+
+          return Promise.resolve([input.id, val]);
         }
 
         console.log('inputs', this.fileInputs);
-        const [fileInput] = this.fileInputs.filter(elm => elm.nativeElement.name == input.id);
+        const [fileInput] = this.fileInputs.filter(elm => elm.nativeElement.name === input.id);
+
+        console.log(fileInput);
 
         return this.jobService.uploadFile(fileInput.nativeElement.files[0], directory).then(path => {
           return [input.id, {

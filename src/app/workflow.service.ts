@@ -6,7 +6,7 @@ import {RequestOptionsArgs} from 'angular-webdav/src/interfaces';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {XmlParser} from '@angular/compiler/src/ml_parser/xml_parser';
 import {safeLoad} from 'js-yaml';
-import {isObject} from 'util';
+import {isArray, isObject} from 'util';
 
 export interface WorkflowInput {
   id: string;
@@ -24,8 +24,9 @@ export interface Workflow {
 
 @Injectable()
 export class WorkflowService {
-  private webdav_url = 'http://localhost:8989/'; // 'https://webdav:aFxOaXFnyQV@145.100.59.204/'; // http://localhost:8989/';
-  private webdav_dir = 'webdav/cwl/'; // 'webdav/cwl/';
+  private webdav_url = 'http://localhost:8989'; // 'https://webdav:aFxOaXFnyQV@145.100.59.204/'; // http://localhost:8989/';
+  private webdav_dir = '/webdav/'
+  private cwl_dir = 'cwl/';
 
   constructor(private httpClient: HttpClient) {
 
@@ -48,13 +49,28 @@ export class WorkflowService {
     return output;
   }
 
-  private parseCwlFile(path:string, content: string): Workflow {
+  private parseCwlFile(path: string, content: string): Workflow {
     const data = safeLoad(content);
+    let dataInputs = data.inputs;
     const inputs = [];
 
-    if (data.inputs) {
-      for (const key in data.inputs) {
-        const value = data.inputs[key];
+    if (!dataInputs) {
+      dataInputs = {};
+    }
+
+    if (isArray(dataInputs)) {
+      const newData = {};
+
+      for (const key in dataInputs) {
+        newData[dataInputs[key].id] = dataInputs[key];
+      }
+
+      dataInputs = newData;
+    }
+
+    if (dataInputs) {
+      for (const key in dataInputs) {
+        const value = dataInputs[key];
 
         if (isObject(value)) {
           inputs.push({
@@ -71,9 +87,13 @@ export class WorkflowService {
             description: '',
             type: value.toLowerCase(),
             default: null
-          })
+          });
         }
       }
+    }
+
+    if (path.startsWith(this.webdav_dir)) {
+      path = path.substr(this.webdav_dir.length);
     }
 
     return {
@@ -85,9 +105,8 @@ export class WorkflowService {
   }
 
   get getAllWorkflows(): Promise<Workflow[]> {
-    const url = this.webdav_url + this.webdav_dir;
+    const url = this.webdav_url + this.webdav_dir + this.cwl_dir;
     const headers = {'Depth': '1'};
-    console.log('requesting', url);
 
     return this.httpClient.request('PROPFIND', url, {headers: headers, responseType: 'text'})
       .toPromise()
