@@ -4,14 +4,23 @@
       <h1>Bridging the Gap: Analyzing Arabic texts</h1>
     </div>
   </div>
-  <div class="row">
-    <div class="col-sm-3">
-      <app-job-list *ngIf="panel != 'login'"></app-job-list>
-    </div>
-    <div class="col-sm-9">
-      <app-job-detail *ngIf="panel=='job-detail'"></app-job-detail>
-      <app-job-new *ngIf="panel=='job-new'"></app-job-new>
-      <app-login *ngIf="panel=='login'"></app-login>
-    </div>
+  <div class="row  justify-content-center">
+
+    <ng-container *ngIf="panel=='login'">
+      <div class="col-sm-4">
+        <app-login></app-login>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="panel!='login'">
+      <div class="col-sm-3">
+        <app-job-list *ngIf="panel != 'login'"></app-job-list>
+      </div>
+      <div class="col-sm-9">
+        <app-job-detail *ngIf="panel=='job-detail'"></app-job-detail>
+        <app-job-new *ngIf="panel=='job-new'"></app-job-new>
+        <app-login *ngIf="panel=='login'"></app-login>
+      </div>
+    </ng-container>
+
   </div>
 </div>

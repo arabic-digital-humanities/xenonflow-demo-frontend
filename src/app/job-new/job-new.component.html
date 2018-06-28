@@ -23,7 +23,7 @@
         <div *ngFor="let input of inputElements" class="form-group">
           <label>{{input.name}}</label>
           <ng-container [ngSwitch]="input.type">
-            <input *ngSwitchCase="'file'" type="file" class="form-control" formControlName="{{input.id}}" name="{{input.name}}" #fileInput>
+            <input *ngSwitchCase="'file'" type="file" class="form-control" formControlName="{{input.id}}" name="{{input.id}}" #fileInput>
             <div *ngSwitchCase="'boolean'">
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" value="true" formControlName="{{input.id}}">
@@ -33,6 +33,11 @@
                 <input class="form-check-input" type="radio" value="false" formControlName="{{input.id}}">
                 <label class="form-check-label">No</label>
               </div>
+            </div>
+            <div *ngSwitchCase="'enum'">
+              <select class="custom-select" formControlName="{{input.id}}">
+                <option *ngFor="let symbol of input.symbols" value="{{symbol}}">{{symbol}}</option>
+              </select>
             </div>
             <input *ngSwitchDefault type="text" class="form-control" formControlName="{{input.id}}">
           </ng-container>

@@ -4,7 +4,7 @@ import { Job } from './job';
 import {WebDAV, Headers} from 'angular-webdav';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {toBase64String} from '@angular/compiler/src/output/source_map';
-import {isArray, isObject} from 'util';
+import {isArray, isObject, isString} from 'util';
 import {safeLoad} from 'js-yaml';
 
 
@@ -14,18 +14,13 @@ export interface JobDescription {
   workflow: string;
 }
 
-export interface InputElement {
+export interface WorkflowInput {
   id: string;
   name: string;
   description: string;
   type: string;
-}
-
-export interface WorkflowInput {
-  id: string;
-  description: string;
-  type: string;
   default: any;
+  symbols: string[]|null;
 }
 
 export interface Workflow {
@@ -42,11 +37,10 @@ export class JobService {
   private _selectedJob: BehaviorSubject<Job>;
   private _updateList: BehaviorSubject<boolean>;
   private _isConnected: BehaviorSubject<boolean>;
-  private api = 'http://localhost:8080/jobs';
-  private webdav_host = 'http://localhost:8989';
-  private webdav_dir = '/webdav/';
-  private cwl_dir = 'cwl/';
-  public inputElements: InputElement[];
+  private api = 'https://arabic-dh.gap-nlesc.surf-hosted.nl/xenonflow/jobs';
+  private webdavHost = 'https://arabic-dh.gap-nlesc.surf-hosted.nl:8443'; // 'http://localhost:8989';
+  private webdavDir = '/';
+  private cwl_dir = 'source/cwl/';
 
   constructor(
     private http: HttpClient,
@@ -55,7 +49,6 @@ export class JobService {
     this._selectedJob = <BehaviorSubject<Job>>new BehaviorSubject(null);
     this._updateList = <BehaviorSubject<boolean>>new BehaviorSubject(false);
     this._isConnected = new BehaviorSubject<boolean>(false);
-    this.inputElements = [];
   }
 
   get selectedJob() {
@@ -98,7 +91,7 @@ export class JobService {
   }
 
   get webdavUrl(): string {
-    return this.webdav_host + this.webdav_dir;
+    return this.webdavHost + this.webdavDir;
   }
 
   set updateList(update: boolean) {
@@ -124,15 +117,20 @@ export class JobService {
   createDir(dirname: string): Promise<boolean> {
     const dir_url = this.webdavUrl + dirname + '/';
     const headers = this.authHeaders();
+    const options = {
+      headers: headers,
+      responseType: 'text' as 'text'
+    };
 
     return new Promise<boolean>((resolve, reject) => {
-      this.http.get(dir_url, {headers: headers, responseType: 'text'}).subscribe(
+      this.http.get(dir_url, options).subscribe(
         (value) => {
           resolve(true);
         },
         (error) => {
           if (error.status === 404) {
-            this.http.request('mkcol', dir_url, {headers: headers}).subscribe(
+            console.log('options', options);
+            this.http.request('mkcol', dir_url, options).subscribe(
               (value) => {
                 resolve(true);
               },
@@ -156,14 +154,18 @@ export class JobService {
 
         const header =  this.authHeaders();
         header.append('Content-Type', 'application/octet-stream');
+        const options = {
+          headers: this.authHeaders(),
+          responseType: 'text' as 'text'
+        };
 
         const path = `${dirname}/${file.name}`;
 
-        this.http.put(`${this.webdavUrl}${path}`, body, {headers: header})
+        this.http.put(`${this.webdavUrl}${path}`, body, options)
           .subscribe(
             (value) => {
               console.log('Succesfully uploaded file: ' + file.name);
-              resolve('/webdav/' + path);
+              resolve(path);
             },
             (error) => {
               console.log(error);
@@ -209,51 +211,62 @@ export class JobService {
     return output;
   }
 
+  private parseInput(id: string, input: any): WorkflowInput {
+    const result = {};
+
+    if (isString(input)) {
+      return this.parseInput(id, {type: input});
+    }
+
+    let type = null;
+    let symbols = null;
+
+    if (input.type === null) {
+      type = 'text';
+    } else if (isString(input.type)) {
+      type = input.type.toLowerCase();
+    } else if (isObject(input.type) && input.type.type.toLowerCase() === 'enum') {
+      type = 'enum';
+      symbols = input.type.symbols;
+    } else {
+      console.warn('Could not parse data type for parseInput', input.type);
+    }
+
+    return {
+      id: id,
+      name: input.label || id,
+      description: input.doc || '',
+      default: input.default || null,
+      type: type,
+      symbols: symbols
+    };
+  }
+
+  private parseInputs(inputs: any): WorkflowInput[] {
+    if (inputs === null) {
+      return [];
+
+    } else if (isArray(inputs)) {
+      return inputs.map(input => {
+        return this.parseInput(input.id, input);
+      });
+
+    } else if (isObject(inputs)) {
+      return Object.keys(inputs).map(id => {
+        return this.parseInput(id, inputs[id]);
+      });
+
+    } else {
+      throw Error('invalid data type for parseInputs');
+    }
+  }
+
   private parseCwlFile(path: string, content: string): Workflow {
     const data = safeLoad(content);
-    let dataInputs = data.inputs;
-    const inputs = [];
+    const inputs = this.parseInputs(data.inputs);
 
-    if (!dataInputs) {
-      dataInputs = {};
-    }
-
-    if (isArray(dataInputs)) {
-      const newData = {};
-
-      for (const key in dataInputs) {
-        newData[dataInputs[key].id] = dataInputs[key];
-      }
-
-      dataInputs = newData;
-    }
-
-    if (dataInputs) {
-      for (const key in dataInputs) {
-        const value = dataInputs[key];
-
-        if (isObject(value)) {
-          inputs.push({
-            id: key,
-            name: (value.label || key).toString(),
-            description: value.doc || '',
-            type: (value.type || '').toString().toLowerCase(),
-            default: value.default || null
-          });
-        } else {
-          inputs.push({
-            id: key,
-            name: key,
-            description: '',
-            type: value.toLowerCase(),
-            default: null
-          });
-        }
-      }
-    }
-
-    if (path.startsWith(this.webdav_dir)) {
-      path = path.substr(this.webdav_dir.length);
+    if (path.startsWith(this.webdavDir)) {
+      path = path.substr(this.webdavDir.length);
     }
 
     return {
@@ -266,17 +279,21 @@ export class JobService {
 
   get getAllWorkflows(): Promise<Workflow[]> {
     const url = this.webdavUrl + this.cwl_dir;
-    const headers = {'Depth': '1'};
+    let headers = this.authHeaders();
+    headers = headers.set('Depth', '1');
 
-    return this.http.request('PROPFIND', url, {headers: headers, responseType: 'text'})
+    const options = {
+      headers: headers,
+      responseType: 'text' as 'text'
+    };
+
+    return this.http.request('PROPFIND', url, options)
       .toPromise()
       .then(v => {
         const paths = this.parsePropfindResponse(v);
 
         return Promise.all(paths.map(path => {
-          const options = {responseType: 'text'};
-
-          return this.http.get(this.webdav_host + path, {responseType: 'text'})
+          return this.http.get(this.webdavHost + path, options)
             .map(content => {
               return this.parseCwlFile(path, content);
             }).toPromise();
@@ -284,7 +301,7 @@ export class JobService {
       }).then(workflows => {
         return workflows
           .filter(x => x.name)
-          .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+          .sort((a, b) => a.name.localeCompare(b.name));
       });
   }
 }

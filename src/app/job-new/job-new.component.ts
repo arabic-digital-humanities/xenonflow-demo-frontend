@@ -65,6 +65,8 @@ export class JobNewComponent implements OnInit {
     this.activeWorkflow = wf;
     this.inputElements = [];
 
+    console.log('wf', wf);
+
     Object.keys(this.inputControls.controls).forEach(control => {
       this.inputControls.removeControl(control);
     });
@@ -124,9 +126,8 @@ export class JobNewComponent implements OnInit {
         }
 
         console.log('inputs', this.fileInputs);
+        console.log('inputs', this.fileInputs.map(elm => elm.nativeElement.name), input.id);
         const [fileInput] = this.fileInputs.filter(elm => elm.nativeElement.name === input.id);
-
-        console.log(fileInput);
 
         return this.jobService.uploadFile(fileInput.nativeElement.files[0], directory).then(path => {
           return [input.id, {
