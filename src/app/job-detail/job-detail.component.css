@@ -21,7 +21,9 @@ h2 {
 }
 
 .right-panel-border {
-  border: solid 1px #282B30;
+  background-color: white;
+  border: solid 1px #aaaaaa;
+  box-shadow: #eeeeee 5px 5px 2px;
   border-radius: 5px;
   margin: 20px 0px;
   height: 100%;

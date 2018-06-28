@@ -8,7 +8,6 @@
 }
 
 .bg {
-  background-color: white;
   color: #282B30;
   margin: 15px 0px;
 }
@@ -26,6 +25,3 @@ h1 {
   margin: 20px 0;
 }
 
-body {
-  background-color: #eeeeee;
-}

@@ -31,15 +31,16 @@ div#job-list div.hr {
   margin-right: 5px;
 }
 
-li.job.active {
-  background-color: lightyellow;
-}
-
 li.job {
+  background-color: white;
   margin: 5px;
   border: solid 1px;
   border-radius: 5px;
   cursor: pointer;
+}
+
+li.job.active {
+  background-color: lightyellow;
 }
 
 li.job h5 {
@@ -98,8 +99,11 @@ li.job .permanentfailure, li.job .systemerror {
 }
 
 .left-panel-border {
-  border: solid 1px #282B30;
+  /*
+  border: solid 1px #aaaaaa;
+  box-shadow: #eeeeee 5px 5px 2px;
   border-radius: 5px;
+  */
   margin: 20px 0px;
   height: 100%;
 }

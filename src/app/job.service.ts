@@ -270,7 +270,7 @@ export class JobService {
     }
 
     return {
-      name: data.label,
+      name: data.label || path,
       description: data.doc || '',
       filename: path,
       inputs: inputs
