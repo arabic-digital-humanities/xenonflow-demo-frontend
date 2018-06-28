@@ -1,0 +1,21 @@
+<div class="right-panel-border">
+  <div>
+    <form [formGroup]="form" novalidate>
+      <div *ngIf="status == 'error'" class="alert alert-danger">
+        Failed to log into WebDAV server or Xenon-flow server.
+      </div>
+
+      <fieldset class="workflow-input">
+        <div class="form-group">
+          <label>Username:</label>
+          <input [ngClass]="{'form-control': true, 'is-invalid': status == 'error'}" formControlName="username" type="text">
+        </div>
+        <div class="form-group">
+          <label>Password:</label>
+          <input [ngClass]="{'form-control': true, 'is-invalid': status == 'error'}" formControlName="password" type="password">
+        </div>
+        <button [disabled]="status=='loading'" class="btn btn-primary btn-block" (click)="submit()">Login</button>
+      </fieldset>
+    </form>
+  </div>
+</div>

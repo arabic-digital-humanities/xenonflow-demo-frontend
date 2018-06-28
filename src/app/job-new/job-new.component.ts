@@ -4,6 +4,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {JobService, JobDescription, Workflow, WorkflowInput} from '../job.service';
 import { safeLoad } from 'js-yaml';
 import {Job} from '../job';
+import {isInteger} from '@ng-bootstrap/ng-bootstrap/util/util';
+import {isUndefined} from 'util';
 
 
 @Component({
@@ -56,7 +58,8 @@ export class JobNewComponent implements OnInit {
 
   processWorkflow() {
     const index = this.jobForm.get('workflow_index').value;
-    if (!this.jobName || !index.length) {
+
+    if (!this.jobName || isUndefined(index)) {
       this.activeWorkflow = null;
       return;
     }

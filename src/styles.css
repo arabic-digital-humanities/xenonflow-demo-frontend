@@ -7,4 +7,5 @@ html,body {
 body {
   margin: 0px;
   overflow-y: scroll;
+  background-color: #fafafa;
 }

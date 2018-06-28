@@ -9,12 +9,21 @@
         </div>
         <div class="form-group">
           <label>Workflow:</label>
+
+<!--
           <select class="form-control" formControlName="workflow_index">
             <option value="" disabled selected>Select your option</option>
             <option *ngFor="let workflow of workflows; let i = index" [value]="i">
               {{workflow.name}} ({{workflow.description}})
             </option>
           </select>
+          -->
+
+          <div *ngFor="let workflow of workflows; let i = index" class="workflow-option">
+            <h2><input type="radio" formControlName="workflow_index" [value]="i"> {{workflow.name}}</h2>
+            <p *ngIf="workflow.description">{{workflow.description}}</p>
+          </div>
+
         </div>
         <button class="btn btn-primary" (click)="processWorkflow()">Next</button>
       </fieldset>

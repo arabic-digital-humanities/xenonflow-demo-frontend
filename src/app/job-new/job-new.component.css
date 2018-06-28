@@ -31,3 +31,20 @@ h2 {
   margin: 20px 0px;
   height: 100%;
 }
+
+.workflow-option {
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  margin: 5px 0;
+  padding: 5px;
+}
+
+.workflow-option h2 {
+  font-size: 1em;
+  padding: 0;
+  margin: 5px 0;
+}
+
+.workflow-option:hover {
+  background-color: lightyellow;
+}

@@ -37,7 +37,7 @@
                   <tr *ngFor="let key of keys(job.output)">
                     <td>{{key}}</td>
                     <td>
-                      <a class="text-info" *ngIf="isFile(job.output[key])" target="_blank" href="{{job.output[key].location}}">{{job.output[key].basename}} <fa name="external-link" fixed="true"></fa></a>
+                      <a class="text-info" *ngIf="isFile(job.output[key])" target="_blank" href="https://arabic-dh.gap-nlesc.surf-hosted.nl:8443/{{job.output[key].path}}">{{job.output[key].basename}} <fa name="external-link" fixed="true"></fa></a>
                       <span *ngIf="!isFile(job.output[key])">{{job.output[key]}}</span>
                     </td>
                   </tr>
