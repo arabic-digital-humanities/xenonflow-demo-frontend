@@ -31,7 +31,7 @@ export class JobNewComponent implements OnInit {
     this.jobForm = this.fb.group({
       name: ['', Validators.required ],
       workflow_index: ['', Validators.required],
-      inputControls: this.fb.group({})
+      input_controls: this.fb.group({})
     });
     this.workflows = [];
     this.inputElements = [];
@@ -45,7 +45,7 @@ export class JobNewComponent implements OnInit {
   }
 
   get inputControls(): FormGroup {
-    return this.jobForm.get('inputControls') as FormGroup;
+    return this.jobForm.get('input_controls') as FormGroup;
   }
 
   get jobName(): string {

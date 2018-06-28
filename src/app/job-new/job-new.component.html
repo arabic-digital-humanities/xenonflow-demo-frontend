@@ -19,7 +19,7 @@
         <button class="btn btn-primary" (click)="processWorkflow()">Next</button>
       </fieldset>
 
-      <fieldset class="workflow-input" *ngIf="activeWorkflow" [formGroup]="inputControls">
+      <fieldset class="workflow-input" *ngIf="activeWorkflow" [formGroup]="input_controls">
         <div *ngFor="let input of inputElements" class="form-group">
           <label>{{input.name}}</label>
           <ng-container [ngSwitch]="input.type">
